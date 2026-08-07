@@ -1,0 +1,264 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
+  }
+  body {
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background-color: #F4F6F8;
+    color: #3B4754;
+  }
+
+  /* Accessibility: Dyslexia-friendly font */
+  .font-dyslexic body,
+  body.font-dyslexic {
+    font-family: 'Lexend', 'Outfit', sans-serif !important;
+    letter-spacing: 0.035em;
+    word-spacing: 0.08em;
+    line-height: 1.6;
+  }
+  .font-dyslexic .font-display,
+  body.font-dyslexic .font-display {
+    font-family: 'Lexend', Georgia, serif !important;
+  }
+
+  /* Accessibility: Font size scaling */
+  body.text-sm-base { font-size: 14px; }
+  body.text-base-default { font-size: 16px; }
+  body.text-lg-base { font-size: 18px; }
+  body.text-xl-base { font-size: 20px; }
+  body.text-lg-base .text-xs { font-size: 13px; }
+  body.text-xl-base .text-xs { font-size: 14px; }
+  body.text-lg-base .text-sm { font-size: 15px; }
+  body.text-xl-base .text-sm { font-size: 16px; }
+  body.text-lg-base .text-base { font-size: 18px; }
+  body.text-xl-base .text-base { font-size: 19px; }
+
+  /* Accessibility: High contrast */
+  body.contrast-high {
+    --text-primary: #2A343D;
+    --text-secondary: #4A5663;
+    --border-soft: rgba(59, 71, 84, 0.4);
+  }
+  body.contrast-high .text-deep-earth { color: #2A343D !important; }
+  body.contrast-high .text-muted-brown { color: #4A5663 !important; }
+  body.contrast-high .text-warm-taupe { color: #6A7682 !important; }
+  body.contrast-high .border-sand\/40 { border-color: rgba(59, 71, 84, 0.35) !important; }
+  body.contrast-high .border-sand\/50 { border-color: rgba(59, 71, 84, 0.4) !important; }
+  body.contrast-high .border-sand\/60 { border-color: rgba(59, 71, 84, 0.45) !important; }
+  body.contrast-high .bg-white\/50 { background-color: rgba(255, 255, 255, 0.85) !important; }
+  body.contrast-high .bg-white\/60 { background-color: rgba(255, 255, 255, 0.9) !important; }
+  body.contrast-high .bg-white\/70 { background-color: rgba(255, 255, 255, 0.92) !important; }
+  body.contrast-high .bg-white\/80 { background-color: rgba(255, 255, 255, 0.95) !important; }
+  body.contrast-high .bg-white\/85 { background-color: rgba(255, 255, 255, 0.97) !important; }
+}
+
+/* Accessibility: Reduced motion */
+.sensory-reduced *,
+.sensory-reduced *::before,
+.sensory-reduced *::after {
+  animation-duration: 0.15s !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.15s !important;
+}
+.sensory-reduced .animate-float-sticker,
+.sensory-reduced .animate-drift-up,
+.sensory-reduced .animate-breeze,
+.sensory-reduced .animate-tumble,
+.sensory-reduced .animate-snowfall,
+.sensory-reduced .animate-pulse-soft {
+  animation: none !important;
+}
+
+/* Accessibility: Minimal mode (no motion) */
+.sensory-minimal *,
+.sensory-minimal *::before,
+.sensory-minimal *::after {
+  animation: none !important;
+  transition: none !important;
+}
+.sensory-minimal .animate-float-sticker,
+.sensory-minimal .animate-drift-up,
+.sensory-minimal .animate-breeze,
+.sensory-minimal .animate-tumble,
+.sensory-minimal .animate-snowfall,
+.sensory-minimal .animate-pulse-soft,
+.sensory-minimal .shimmer-text {
+  animation: none !important;
+}
+
+/* Focus-visible outline for keyboard navigation */
+*:focus-visible {
+  outline: 2px solid #6B95B8;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@layer base {
+  .font-display {
+    font-family: 'Fraunces', Georgia, serif;
+  }
+}
+
+/* ---- Keyframe animations ---- */
+@keyframes float-sticker {
+  0%, 100% { transform: translateY(0) rotate(var(--rot, 0deg)); }
+  50% { transform: translateY(-10px) rotate(calc(var(--rot, 0deg) + 4deg)); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* ---- Utility animations ---- */
+.animate-float-sticker {
+  animation: float-sticker 5s ease-in-out infinite;
+}
+.animate-pulse-soft {
+  animation: pulse-soft 2s ease-in-out infinite;
+}
+
+/* ---- Seasonal floral animations ---- */
+@keyframes seasonal-drift-up {
+  0% {
+    transform: translateY(20px) rotate(var(--rot, 0deg));
+    opacity: 0;
+  }
+  15% {
+    opacity: var(--opacity, 0.5);
+  }
+  85% {
+    opacity: var(--opacity, 0.5);
+  }
+  100% {
+    transform: translateY(-40px) rotate(calc(var(--rot, 0deg) + 15deg));
+    opacity: 0;
+  }
+}
+
+@keyframes seasonal-breeze {
+  0%, 100% {
+    transform: translateY(0) translateX(0) rotate(var(--rot, 0deg));
+  }
+  25% {
+    transform: translateY(-8px) translateX(4px) rotate(calc(var(--rot, 0deg) + 5deg));
+  }
+  50% {
+    transform: translateY(-4px) translateX(-2px) rotate(calc(var(--rot, 0deg) - 3deg));
+  }
+  75% {
+    transform: translateY(-10px) translateX(6px) rotate(calc(var(--rot, 0deg) + 7deg));
+  }
+}
+
+@keyframes seasonal-tumble {
+  0% {
+    transform: translateY(-30px) translateX(0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: var(--opacity, 0.6);
+  }
+  90% {
+    opacity: var(--opacity, 0.6);
+  }
+  100% {
+    transform: translateY(100vh) translateX(40px) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+@keyframes seasonal-snowfall {
+  0% {
+    transform: translateY(-30px) translateX(0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: var(--opacity, 0.7);
+  }
+  90% {
+    opacity: var(--opacity, 0.7);
+  }
+  100% {
+    transform: translateY(100vh) translateX(12px) rotate(180deg);
+    opacity: 0;
+  }
+}
+
+.animate-drift-up {
+  animation: seasonal-drift-up var(--dur, 8s) ease-in-out infinite;
+}
+.animate-breeze {
+  animation: seasonal-breeze var(--dur, 6s) ease-in-out infinite;
+}
+.animate-tumble {
+  animation: seasonal-tumble var(--dur, 12s) linear infinite;
+}
+.animate-snowfall {
+  animation: seasonal-snowfall var(--dur, 15s) linear infinite;
+}
+
+/* ---- Custom scrollbar ---- */
+.scroll-warm::-webkit-scrollbar { width: 6px; }
+.scroll-warm::-webkit-scrollbar-track { background: transparent; }
+.scroll-warm::-webkit-scrollbar-thumb { background: #C2C9D1; border-radius: 9999px; }
+.scroll-warm::-webkit-scrollbar-thumb:hover { background: #8B97A4; }
+
+/* ---- Animated multi-color gradient background ---- */
+.bg-animated-gradient {
+  background: linear-gradient(120deg, #F4F6F8 0%, #F2EDE3 20%, #E8D5CE 40%, #E8ECEF 60%, #DCE6EF 80%, #D6E3D8 100%);
+  background-size: 300% 300%;
+  animation: gradient-shift 15s ease infinite;
+}
+
+/* ---- Shimmer text ---- */
+.shimmer-text {
+  background: linear-gradient(90deg, #C9A961 0%, #C99B8E 25%, #8B9BA8 50%, #6B95B8 75%, #7BA08C 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 4s linear infinite;
+}
+
+/* ---- Gradient text helper ---- */
+.gradient-text-amber {
+  background: linear-gradient(135deg, #C9A961, #C99B8E);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.gradient-text-rose {
+  background: linear-gradient(135deg, #B89098, #8B9BA8);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.gradient-text-sage {
+  background: linear-gradient(135deg, #7BA08C, #6B95B8);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.gradient-text-sunset {
+  background: linear-gradient(135deg, #D9C084, #C99B8E, #B89098);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}

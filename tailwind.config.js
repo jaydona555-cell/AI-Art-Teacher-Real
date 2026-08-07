@@ -1,0 +1,90 @@
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+  theme: {
+    extend: {
+      fontFamily: {
+        sans: ['Outfit', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+        display: ['Fraunces', 'Georgia', 'serif'],
+      },
+      colors: {
+        // Warm Neutrals (base)
+        'deep-earth': '#3B4754',
+        'muted-brown': '#5C6B7A',
+        'warm-taupe': '#8B97A4',
+        'sand': '#C2C9D1',
+        'cream': '#F4F6F8',
+
+        // Soft Blues & Greens (base)
+        'pastel-sage': '#D6E3D8',
+        'pastel-sage-dark': '#7BA08C',
+        'pastel-blush': '#E8ECEF',
+        'pastel-blush-dark': '#A8B5C0',
+        'pastel-sky': '#DCE6EF',
+        'pastel-sky-dark': '#6B95B8',
+        'pastel-butter': '#F2EDE3',
+        'pastel-lavender': '#E4E8EC',
+        'pastel-lavender-dark': '#8B9BA8',
+        'pastel-amber': '#F0E8D6',
+        'pastel-amber-dark': '#C9A961',
+        'pastel-mint': '#DDE9DC',
+        'pastel-mint-dark': '#6B9E7C',
+        'pastel-coral': '#E8D5CE',
+        'pastel-coral-dark': '#C99B8E',
+        'pastel-peach': '#EDE0D5',
+        'pastel-peach-dark': '#D4A88E',
+        'pastel-rose': '#E5DDE0',
+        'pastel-rose-dark': '#B89098',
+
+        // Muted Accents (non-jarring)
+        'accent-amber': '#C9A961',
+        'accent-amber-light': '#D9C084',
+        'accent-amber-deep': '#A88940',
+        'accent-rose': '#B89098',
+        'accent-rose-light': '#CBA8B0',
+        'accent-sage': '#7BA08C',
+        'accent-sky': '#6B95B8',
+        'accent-coral': '#C99B8E',
+        'accent-peach': '#D4A88E',
+        'accent-lavender': '#8B9BA8',
+        'accent-mint': '#6B9E7C',
+      },
+      backgroundImage: {
+        'gradient-warm': 'linear-gradient(135deg, #F4F6F8 0%, #F2EDE3 50%, #F0E8D6 100%)',
+        'gradient-sunset': 'linear-gradient(135deg, #F0E8D6 0%, #E8D5CE 50%, #E8ECEF 100%)',
+        'gradient-ocean': 'linear-gradient(135deg, #DCE6EF 0%, #D6E3D8 50%, #DDE9DC 100%)',
+        'gradient-blossom': 'linear-gradient(135deg, #E8ECEF 0%, #E5DDE0 50%, #E4E8EC 100%)',
+        'gradient-spring': 'linear-gradient(135deg, #DDE9DC 0%, #D6E3D8 50%, #DCE6EF 100%)',
+        'gradient-vibrant': 'linear-gradient(135deg, #D9C084 0%, #C99B8E 50%, #B89098 100%)',
+        'gradient-header': 'linear-gradient(90deg, #C9A961, #C99B8E, #B89098, #8B9BA8)',
+        'gradient-sage-amber': 'linear-gradient(135deg, #7BA08C 0%, #C9A961 100%)',
+        'gradient-sky-lavender': 'linear-gradient(135deg, #6B95B8 0%, #8B9BA8 100%)',
+        'gradient-coral-rose': 'linear-gradient(135deg, #C99B8E 0%, #B89098 100%)',
+        'gradient-peach-amber': 'linear-gradient(135deg, #D4A88E 0%, #C9A961 100%)',
+        'gradient-mint-sage': 'linear-gradient(135deg, #6B9E7C 0%, #7BA08C 100%)',
+        // Seasonal gradients
+        'gradient-season-spring': 'linear-gradient(135deg, #DCE6EF 0%, #E8ECEF 100%)',
+        'gradient-season-summer': 'linear-gradient(135deg, #F2EDE3 0%, #D6E3D8 100%)',
+        'gradient-season-autumn': 'linear-gradient(135deg, #C2C9D1 0%, #8B97A4 100%)',
+        'gradient-season-winter': 'linear-gradient(135deg, #3B4754 0%, #8B97A4 100%)',
+      },
+      boxShadow: {
+        'sticker': '0 4px 10px -2px rgba(59, 71, 84, 0.10), 0 2px 6px -1px rgba(59, 71, 84, 0.06)',
+        'sticker-lg': '0 8px 20px -4px rgba(59, 71, 84, 0.12), 0 4px 10px -2px rgba(59, 71, 84, 0.08)',
+        'card-soft': '0 10px 30px -8px rgba(59, 71, 84, 0.07), 0 4px 12px -4px rgba(59, 71, 84, 0.05)',
+        'card-warm': '0 8px 25px -5px rgba(59, 71, 84, 0.09), 0 6px 12px -6px rgba(59, 71, 84, 0.06)',
+        'card-color': '0 8px 25px -5px rgba(201, 169, 97, 0.15), 0 6px 12px -6px rgba(184, 144, 152, 0.08)',
+        'inner-warm': 'inset 0 2px 8px -2px rgba(59, 71, 84, 0.05)',
+        'glow-amber': '0 0 20px -4px rgba(201, 169, 97, 0.3)',
+        'glow-rose': '0 0 20px -4px rgba(184, 144, 152, 0.3)',
+        'glow-sage': '0 0 20px -4px rgba(123, 160, 140, 0.3)',
+      },
+      borderRadius: {
+        'sticker': '1.5rem',
+        '2xl': '1.25rem',
+        
+      },
+    },
+  },
+  plugins: [],
+};

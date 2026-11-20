@@ -3,7 +3,7 @@ import { createContext, useContext, useState, useEffect, useCallback, type React
 export type StickerPack = "starter" | "nature" | "cosmic";
 export type ThemeName = "blossom" | "ocean";
 export type ShopBackground = "greek-mythology" | "chinese-art";
-export type ShopItem = "generate-masterpiece";
+export type ShopItem = "generate-masterpiece" | "generate-speedpaint";
 
 export interface UnlockState {
   stickerPacks: Record<StickerPack, boolean>;

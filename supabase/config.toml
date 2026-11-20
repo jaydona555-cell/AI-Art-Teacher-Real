@@ -1,0 +1,2 @@
+[functions.analyze-artwork]
+verify_jwt = false

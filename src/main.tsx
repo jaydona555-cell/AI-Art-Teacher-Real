@@ -1,4 +1,10 @@
-const script = document.createElement('script');
-script.src = '/assets/index-BVHSvXNw.js';
-script.async = false;
-document.body.appendChild(script);
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import App from "./App";
+import "./index.css";
+
+createRoot(document.getElementById("root")!).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+);

@@ -498,6 +498,116 @@ Deno.serve(async (req: Request) => {
       return new Response(JSON.stringify({ error: "No AI API keys are configured on the server." }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    // ── Mode: Oil Painting Demo (AI-generated step-by-step technique guide) ──
+    if (body.mode === "oil-painting-demo") {
+      const technique = body.technique || "alla-prima";
+      const techniqueDescriptions: Record<string, string> = {
+        "alla-prima": "Alla Prima (wet-on-wet, single session painting)",
+        "glazing": "Glazing (transparent color layers over a dry underpainting)",
+        "impasto": "Impasto (thick, textured paint applied with brush or knife)",
+        "underpainting": "Underpainting & Grisaille (monochrome value foundation)",
+        "scumbling": "Scumbling (dry, opaque layers dragged over dried paint)",
+        "fat-over-lean": "Fat-over-Lean Layering (progressive oil content for proper drying)",
+      };
+      const techniqueName = techniqueDescriptions[technique] || techniqueDescriptions["alla-prima"];
+
+      const systemPrompt = `You are a master oil painting instructor with decades of atelier teaching experience. Create a detailed, step-by-step process guide for the technique: ${techniqueName}.
+
+The guide should be practical, beginner-friendly, and cover:
+1. Materials needed (specific paint colors, brushes, mediums, surfaces)
+2. Setup and preparation
+3. Step-by-step process (5-7 clear steps with what to do at each stage)
+4. Common mistakes and how to avoid them
+5. Pro tips from a master painter
+6. Practice exercises to develop the technique
+
+Use markdown formatting with clear headings, bullet points, and emphasis. Be specific about colors, brush sizes, and techniques. Write as if speaking directly to an eager student.
+
+Respond with ONLY a valid JSON object: {"title": "string", "guide": "string (full markdown guide)", "difficulty": "beginner|intermediate|advanced", "estimatedTime": "string"}`;
+
+      let result: ApiCallResult = { ok: false, text: "", error: "No API keys" };
+      if (geminiApiKey) {
+        result = await tryGeminiTextOnly(ALL_TEXT_MODELS, geminiApiKey, systemPrompt, [{ role: "user", parts: [{ text: `Create a comprehensive oil painting process guide for: ${techniqueName}` }] }], 4096, 0.7);
+      }
+      if (!result.ok) {
+        if (!openaiApiKey) {
+          return new Response(JSON.stringify({ error: result.error || "All AI providers failed" }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+        const resp = await callOpenAIText(openaiApiKey, [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: `Create a comprehensive oil painting process guide for: ${techniqueName}` },
+        ], 4096, 0.7);
+        if (resp.ok) {
+          const data = await resp.json();
+          const text = data.choices?.[0]?.message?.content;
+          if (text) result = { ok: true, text };
+        }
+      }
+
+      if (!result.ok || !result.text) {
+        return new Response(JSON.stringify({ error: result.error || "Failed to generate oil painting guide" }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      let parsedGuide: { title?: string; guide?: string; difficulty?: string; estimatedTime?: string } | null = null;
+      try {
+        const jsonStr = extractJsonFromText(result.text);
+        if (jsonStr) parsedGuide = JSON.parse(jsonStr);
+      } catch { /* fall through */ }
+
+      if (!parsedGuide || !parsedGuide.guide) {
+        return new Response(JSON.stringify({
+          title: techniqueName,
+          guide: result.text,
+          difficulty: "intermediate",
+          estimatedTime: "2-4 hours",
+        }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      return new Response(JSON.stringify({
+        title: parsedGuide.title || techniqueName,
+        guide: parsedGuide.guide,
+        difficulty: parsedGuide.difficulty || "intermediate",
+        estimatedTime: parsedGuide.estimatedTime || "2-4 hours",
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // ── Mode: Generate Speedpaint (4 progressive DALL-E stages) ──
+    if (body.mode === "generate-speedpaint") {
+      const styleDescription = body.styleDescription || "a beautiful artistic masterpiece";
+      const stages = [
+        { label: "Rough Sketch", instruction: "Create ONLY a very rough, loose pencil sketch — light construction lines, basic shapes and proportions, minimal detail, mostly empty white canvas with faint graphite marks. Same composition and subject as the final work below." },
+        { label: "Block-In", instruction: "Create an underpainting / block-in stage — flat color shapes blocking in major forms, no fine detail, rough value structure, visible brush strokes establishing the composition. Mid-progress." },
+        { label: "Refinement", instruction: "Create a refined mid-stage — most details rendered, blending and modeling underway, some areas still loose, colors developed, 80% complete." },
+        { label: "Finished Work", instruction: "Create the finished, complete artwork — fully rendered, all details complete, polished and gallery-ready." },
+      ];
+
+      const stageResults: { label: string; imageBase64: string | null; imageUrl: string | null }[] = [];
+      for (let i = 0; i < stages.length; i++) {
+        const stage = stages[i];
+        const stagePrompt = `${stage.instruction} Style: ${styleDescription}. Artwork quality, single coherent piece.`;
+        const dalleResponse = await fetch("https://api.openai.com/v1/images/generations", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${openaiApiKey}` },
+          body: JSON.stringify({ model: "dall-e-3", prompt: stagePrompt, n: 1, size: "1024x1024", quality: "standard", response_format: "b64_json" }),
+        });
+
+        if (!dalleResponse.ok) {
+          const errText = await dalleResponse.text().catch(() => "");
+          return new Response(JSON.stringify({ error: `Speedpaint stage ${i + 1} failed: ${errText.slice(0, 200)}`, partialStages: stageResults }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+
+        const dalleData = await dalleResponse.json();
+        const imageB64 = dalleData.data?.[0]?.b64_json;
+        const imageUrl = dalleData.data?.[0]?.url;
+        if (!imageB64 && !imageUrl) {
+          return new Response(JSON.stringify({ error: `Speedpaint stage ${i + 1} returned no image`, partialStages: stageResults }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+        stageResults.push({ label: stage.label, imageBase64: imageB64 || null, imageUrl: imageUrl || null });
+      }
+
+      return new Response(JSON.stringify({ stages: stageResults }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     // ── Mode: Generate Masterpiece (DALL-E 3) ──
     if (body.mode === "generate-masterpiece") {
       const styleDescription = body.styleDescription || "a beautiful artistic masterpiece";

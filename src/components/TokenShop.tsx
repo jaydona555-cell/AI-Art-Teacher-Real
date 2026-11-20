@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Coins, Check, Lock, Sparkles, Mountain, Palette, Wand2, Loader2,
-  Music, Brush, Frame, Star,
+  Music, Brush, Frame, Star, Clapperboard,
 } from "lucide-react";
 import { useState } from "react";
 import { useReward, type ShopBackground, type ShopItem } from "@/context/RewardContext";
@@ -55,6 +55,18 @@ const SHOP_ITEMS: ShopItemDef[] = [
     value: "generate-masterpiece",
     category: "tools",
     badge: "Premium",
+  },
+  {
+    id: "generate-speedpaint",
+    name: "AI Speedpaint",
+    description: "Watch the AI paint your artwork from scratch — a 4-stage progression from rough sketch to finished masterpiece. A mesmerizing replay.",
+    cost: 120,
+    icon: Clapperboard,
+    accent: "from-amber-500 to-rose-500",
+    type: "item",
+    value: "generate-speedpaint",
+    category: "tools",
+    badge: "New",
   },
   {
     id: "frame-gold",
@@ -125,9 +137,10 @@ interface TokenShopProps {
   open: boolean;
   onClose: () => void;
   onGenerateMasterpiece: () => void;
+  onGenerateSpeedpaint: () => void;
 }
 
-export default function TokenShop({ open, onClose, onGenerateMasterpiece }: TokenShopProps) {
+export default function TokenShop({ open, onClose, onGenerateMasterpiece, onGenerateSpeedpaint }: TokenShopProps) {
   const { tokens, purchasedBackgrounds, purchasedItems, activeBackground, purchaseBackground, purchaseItem, setActiveBackground } = useReward();
   const [generating, setGenerating] = useState(false);
   const [category, setCategory] = useState<Category>("all");
@@ -166,6 +179,15 @@ export default function TokenShop({ open, onClose, onGenerateMasterpiece }: Toke
         } else {
           showToast("Not enough tokens!", "error");
         }
+      } else if (item.value === "generate-speedpaint") {
+        if (purchasedItems.includes(item.value as ShopItem)) {
+          triggerSpeedpaint();
+        } else if (purchaseItem(item.value as ShopItem, item.cost)) {
+          showToast("Speedpaint commissioned!", "success");
+          triggerSpeedpaint();
+        } else {
+          showToast("Not enough tokens!", "error");
+        }
       } else {
         if (!purchasedItems.includes(item.value as ShopItem)) {
           if (purchaseItem(item.value as ShopItem, item.cost)) {
@@ -183,6 +205,11 @@ export default function TokenShop({ open, onClose, onGenerateMasterpiece }: Toke
   const triggerMasterpiece = () => {
     setGenerating(true);
     onGenerateMasterpiece();
+  };
+
+  const triggerSpeedpaint = () => {
+    setGenerating(true);
+    onGenerateSpeedpaint();
   };
 
   const filteredItems = category === "all" ? SHOP_ITEMS : SHOP_ITEMS.filter((i) => i.category === category);
@@ -262,6 +289,7 @@ export default function TokenShop({ open, onClose, onGenerateMasterpiece }: Toke
             const disabled = !isPurchased && !canAfford;
             const Icon = item.icon;
             const isMasterpiece = item.value === "generate-masterpiece";
+            const isSpeedpaint = item.value === "generate-speedpaint";
 
             return (
               <motion.div
@@ -298,6 +326,13 @@ export default function TokenShop({ open, onClose, onGenerateMasterpiece }: Toke
                           >
                             <Sparkles size={14} /> Generate
                           </button>
+                        ) : isSpeedpaint ? (
+                          <button
+                            onClick={() => handlePurchase(item)}
+                            className={`inline-flex items-center gap-1.5 text-sm font-medium rounded-full px-4 py-2 bg-gradient-to-r from-amber-500 to-rose-500 text-white hover:shadow-glow-amber transition-all ${pulseId === item.id ? 'animate-pulse-soft scale-110' : ''}`}
+                          >
+                            <Clapperboard size={14} /> Play
+                          </button>
                         ) : (
                           <button
                             onClick={() => handlePurchase(item)}
@@ -310,7 +345,7 @@ export default function TokenShop({ open, onClose, onGenerateMasterpiece }: Toke
                             {isActive ? (<><Check size={14} /> Active</>) : isBg ? (<><Sparkles size={14} /> Activate</>) : (<><Check size={14} /> Owned</>)}
                           </button>
                         )
-                      ) : isMasterpiece && generating ? (
+                      ) : (isMasterpiece || isSpeedpaint) && generating ? (
                         <div className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-brown px-4 py-2">
                           <Loader2 size={14} className="animate-spin" /> Generating...
                         </div>

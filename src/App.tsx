@@ -17,6 +17,7 @@ import PremiumBackground from "@/components/PremiumBackground";
 import TokenShop from "@/components/TokenShop";
 import PreferredMediumSelector from "@/components/PreferredMediumSelector";
 import MasterpieceModal from "@/components/MasterpieceModal";
+import SpeedpaintModal, { type SpeedpaintStage } from "@/components/SpeedpaintModal";
 import Portfolio from "@/components/Portfolio";
 import CritiquePinsOverlay from "@/components/CritiquePinsOverlay";
 import AccessibilityPanel from "@/components/AccessibilityPanel";
@@ -84,6 +85,20 @@ const INITIAL_MASTERPIECE: MasterpieceState = {
   error: null,
 };
 
+interface SpeedpaintState {
+  open: boolean;
+  loading: boolean;
+  stages: SpeedpaintStage[];
+  error: string | null;
+}
+
+const INITIAL_SPEEDPAINT: SpeedpaintState = {
+  open: false,
+  loading: false,
+  stages: [],
+  error: null,
+};
+
 const API_URL = import.meta.env.VITE_SUPABASE_URL;
 const API_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
@@ -103,6 +118,7 @@ function AppContent() {
   const [shopOpen, setShopOpen] = useState(false);
   const [stickerCanvasOpen, setStickerCanvasOpen] = useState(false);
   const [masterpiece, setMasterpiece] = useState<MasterpieceState>(INITIAL_MASTERPIECE);
+  const [speedpaint, setSpeedpaint] = useState<SpeedpaintState>(INITIAL_SPEEDPAINT);
   const [lastImageBase64, setLastImageBase64] = useState<string | null>(null);
   const [accessibilityOpen, setAccessibilityOpen] = useState(false);
   const [achievementsOpen, setAchievementsOpen] = useState(false);
@@ -339,6 +355,49 @@ function AppContent() {
         loading: false,
         imageData: null,
         error: err instanceof Error ? err.message : "Failed to generate masterpiece",
+      });
+    }
+  }, [lastImageBase64]);
+
+  const handleGenerateSpeedpaint = useCallback(async () => {
+    setSpeedpaint({ open: true, loading: true, stages: [], error: null });
+
+    try {
+      let styleDescription = "a beautiful artistic masterpiece";
+      if (lastImageBase64) {
+        const styleRes = await fetch(`${API_URL}/functions/v1/analyze-artwork`, {
+          method: "POST",
+          headers: { "apikey": API_KEY, "Content-Type": "application/json" },
+          body: JSON.stringify({ mode: "analyze-style", imageBase64: lastImageBase64 }),
+        });
+        const styleData = await styleRes.json().catch(() => null);
+        if (styleData?.styleDescription) {
+          styleDescription = styleData.styleDescription;
+        }
+      }
+
+      const res = await fetch(`${API_URL}/functions/v1/analyze-artwork`, {
+        method: "POST",
+        headers: { "apikey": API_KEY, "Content-Type": "application/json" },
+        body: JSON.stringify({ mode: "generate-speedpaint", styleDescription }),
+      });
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        throw new Error(data?.error || "Failed to generate speedpaint");
+      }
+
+      if (data.stages && Array.isArray(data.stages) && data.stages.length > 0) {
+        setSpeedpaint({ open: true, loading: false, stages: data.stages, error: null });
+      } else {
+        throw new Error("No stages returned");
+      }
+    } catch (err) {
+      setSpeedpaint({
+        open: true,
+        loading: false,
+        stages: [],
+        error: err instanceof Error ? err.message : "Failed to generate speedpaint",
       });
     }
   }, [lastImageBase64]);
@@ -816,6 +875,7 @@ function AppContent() {
           open={shopOpen}
           onClose={() => setShopOpen(false)}
           onGenerateMasterpiece={handleGenerateMasterpiece}
+          onGenerateSpeedpaint={handleGenerateSpeedpaint}
         />
       </AnimatePresence>
 
@@ -830,6 +890,14 @@ function AppContent() {
         imageData={masterpiece.imageData}
         loading={masterpiece.loading}
         error={masterpiece.error}
+      />
+
+      <SpeedpaintModal
+        open={speedpaint.open}
+        onClose={() => setSpeedpaint(INITIAL_SPEEDPAINT)}
+        stages={speedpaint.stages}
+        loading={speedpaint.loading}
+        error={speedpaint.error}
       />
 
       <UnlockToast />

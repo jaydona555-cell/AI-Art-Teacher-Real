@@ -558,19 +558,25 @@ Deno.serve(async (req: Request) => {
 
       const instructorContext = mediumContext[medium] || mediumContext.oil;
 
-      const systemPrompt = `You are a master ${instructorContext} Create a detailed, step-by-step process guide for the ${mediumLabel} technique: ${techniqueName}.
+      const systemPrompt = `You are a master ${instructorContext} Create a structured, interactive lesson for the ${mediumLabel} technique: ${techniqueName}.
 
-The guide should be practical, beginner-friendly, and cover:
-1. Materials needed (specific ${mediumLabel.toLowerCase()} supplies, tools, and surfaces)
-2. Setup and preparation
-3. Step-by-step process (5-7 clear steps with what to do at each stage)
-4. Common mistakes and how to avoid them
-5. Pro tips from a master artist
-6. Practice exercises to develop the technique
+This is a TEACHING LESSON — not a critique, not a follow-up chat response, and not a simple tutorial list. It should feel like a master teacher sitting beside the student, walking them through everything they need to master this technique from the ground up.
 
-Use markdown formatting with clear headings, bullet points, and emphasis. Be specific about materials, tools, and techniques. Write as if speaking directly to an eager student.
+Respond with ONLY a valid JSON object with this exact structure:
+{
+  "title": "string",
+  "difficulty": "beginner|intermediate|advanced",
+  "estimatedTime": "string (e.g. '2-3 hours')",
+  "overview": "string (2-3 paragraphs introducing the technique, its history, why it matters, and what the student will be able to do after completing this lesson — written in the teacher's warm, direct voice)",
+  "learningObjectives": ["string", "string", ...] (4-6 specific, measurable things the student will learn),
+  "materials": [{"name": "string", "purpose": "string", "notes": "string"}] (specific supplies with why each is needed),
+  "steps": [{"title": "string", "instruction": "string (detailed markdown)", "tip": "string (a pro tip for this step)"}] (5-7 sequential steps, each with rich instruction),
+  "commonMistakes": [{"mistake": "string", "fix": "string"}] (4-5 pitfalls and how to correct them),
+  "exercises": [{"name": "string", "description": "string", "duration": "string"}] (3-4 practice exercises the student can do to build the skill),
+  "masterReferences": ["string", ...] (2-3 famous artworks or artists that exemplify this technique, with a sentence about what to study in each)
+}
 
-Respond with ONLY a valid JSON object: {"title": "string", "guide": "string (full markdown guide)", "difficulty": "beginner|intermediate|advanced", "estimatedTime": "string"}`;
+Be specific and thorough. Write each step's instruction as if you are standing next to the student, explaining exactly what to do and why. Use markdown formatting within the instruction fields. Be specific about colors, tools, surfaces, and techniques.`;
 
       let result: ApiCallResult = { ok: false, text: "", error: "No API keys" };
       if (geminiApiKey) {
@@ -595,26 +601,49 @@ Respond with ONLY a valid JSON object: {"title": "string", "guide": "string (ful
         return new Response(JSON.stringify({ error: result.error || "Failed to generate technique guide" }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
-      let parsedGuide: { title?: string; guide?: string; difficulty?: string; estimatedTime?: string } | null = null;
+      let parsedLesson: {
+        title?: string; difficulty?: string; estimatedTime?: string;
+        overview?: string; learningObjectives?: string[];
+        materials?: Array<{ name: string; purpose: string; notes?: string }>;
+        steps?: Array<{ title: string; instruction: string; tip?: string }>;
+        commonMistakes?: Array<{ mistake: string; fix: string }>;
+        exercises?: Array<{ name: string; description: string; duration?: string }>;
+        masterReferences?: string[];
+        guide?: string;
+      } | null = null;
       try {
         const jsonStr = extractJsonFromText(result.text);
-        if (jsonStr) parsedGuide = JSON.parse(jsonStr);
+        if (jsonStr) parsedLesson = JSON.parse(jsonStr);
       } catch { /* fall through */ }
 
-      if (!parsedGuide || !parsedGuide.guide) {
+      if (!parsedLesson || (!parsedLesson.overview && !parsedLesson.guide)) {
         return new Response(JSON.stringify({
           title: techniqueName,
-          guide: result.text,
           difficulty: "intermediate",
           estimatedTime: "2-4 hours",
+          overview: result.text.slice(0, 2000),
+          learningObjectives: [],
+          materials: [],
+          steps: [],
+          commonMistakes: [],
+          exercises: [],
+          masterReferences: [],
         }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
       return new Response(JSON.stringify({
-        title: parsedGuide.title || techniqueName,
-        guide: parsedGuide.guide,
-        difficulty: parsedGuide.difficulty || "intermediate",
-        estimatedTime: parsedGuide.estimatedTime || "2-4 hours",
+        title: parsedLesson.title || techniqueName,
+        difficulty: parsedLesson.difficulty || "intermediate",
+        estimatedTime: parsedLesson.estimatedTime || "2-4 hours",
+        overview: parsedLesson.overview || "",
+        learningObjectives: parsedLesson.learningObjectives || [],
+        materials: parsedLesson.materials || [],
+        steps: parsedLesson.steps || [],
+        commonMistakes: parsedLesson.commonMistakes || [],
+        exercises: parsedLesson.exercises || [],
+        masterReferences: parsedLesson.masterReferences || [],
+        mediumName: mediumLabel,
+        techniqueName,
       }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
@@ -703,6 +732,59 @@ Respond with ONLY a valid JSON object: {"title": "string", "guide": "string (ful
       }
 
       return new Response(JSON.stringify({ styleDescription: description }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // ── Mode: Lesson Tutor (AI chat within a lesson, context-aware) ──
+    if (body.mode === "lesson-tutor") {
+      const history = body.history || [];
+      const lessonContext = body.lessonContext || "";
+      const techniqueName = body.techniqueName || "";
+      const mediumName = body.mediumName || "";
+
+      const LESSON_TUTOR_PROMPT = `You are a master art teacher conducting a one-on-one lesson on ${techniqueName} in ${mediumName}. The student is currently working through a structured lesson you created. Your role is to answer their questions, demonstrate concepts, and guide them through the technique — NOT to critique artwork.
+
+LESSON CONTEXT (the guide the student is reading):
+${lessonContext}
+
+Guidelines:
+- Answer questions specifically about the technique, materials, or steps in the lesson
+- If a student is confused about a step, break it down further or offer an alternative explanation
+- Suggest mini-exercises they can try right now to build the skill
+- Share relevant art history or master examples when it helps understanding
+- Keep responses concise (100-200 words) and conversational — this is a dialogue, not a lecture
+- Use markdown for clarity (bold key terms, bullet lists for steps)
+- Never reference "the feedback" or "your artwork" — this is a technique lesson, not a critique session`;
+
+      const contents = [
+        { role: "user", parts: [{ text: `Lesson context: ${techniqueName} in ${mediumName}.\n\n${lessonContext}\n\nThe student has questions about this lesson.` }] },
+        ...history.map((msg: { role: string; content: string }) => ({ role: msg.role === "assistant" ? "model" : "user", parts: [{ text: msg.content }] })),
+      ];
+
+      let result: ApiCallResult = { ok: false, text: "", error: "No API keys" };
+      if (geminiApiKey) {
+        result = await tryGeminiTextOnly(ALL_TEXT_MODELS, geminiApiKey, LESSON_TUTOR_PROMPT, contents, 1024, 0.7);
+      }
+      if (!result.ok) {
+        if (!openaiApiKey) {
+          return new Response(JSON.stringify({ error: result.error || "All AI providers failed" }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+        const resp = await callOpenAIText(openaiApiKey, [
+          { role: "system", content: LESSON_TUTOR_PROMPT },
+          { role: "user", content: `Lesson: ${techniqueName} in ${mediumName}. The student has questions.` },
+          ...history.map((msg) => ({ role: msg.role === "assistant" ? "assistant" : "user", content: msg.content })),
+        ], 1024, 0.7);
+        if (resp.ok) {
+          const data = await resp.json();
+          const text = data.choices?.[0]?.message?.content;
+          if (text) result = { ok: true, text };
+        }
+      }
+
+      if (!result.ok || !result.text) {
+        return new Response(JSON.stringify({ error: result.error || "Failed to get tutor response" }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      return new Response(JSON.stringify({ feedback: result.text }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // ── Mode: Follow-up conversation ──

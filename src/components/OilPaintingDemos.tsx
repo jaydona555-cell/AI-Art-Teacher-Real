@@ -16,12 +16,17 @@ import {
   Droplet,
   Wind,
   Flame,
+  Pencil,
+  PenTool,
+  Cloud,
+  Eraser,
+  Sun,
 } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_SUPABASE_URL;
 const API_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-interface OilDemoGuide {
+interface TechniqueGuide {
   title: string;
   guide: string;
   difficulty: string;
@@ -45,77 +50,323 @@ interface Technique {
   youtubeVideos: YoutubeVideo[];
 }
 
-const TECHNIQUES: Technique[] = [
+interface Medium {
+  id: string;
+  name: string;
+  icon: typeof Brush;
+  color: string;
+  techniques: Technique[];
+}
+
+const MEDIUMS: Medium[] = [
   {
-    id: "alla-prima",
-    name: "Alla Prima",
-    icon: Flame,
-    description: "Wet-on-wet painting completed in a single session. Bold, direct, and spontaneous.",
-    color: "from-accent-amber to-accent-coral",
-    difficulty: "Beginner",
-    youtubeVideos: [
-      { id: "y1", title: "Alla Prima Painting Tutorial - 5 Easy Steps to GET STARTED", channel: "Painting Lessons", url: "https://www.youtube.com/watch?v=Os9tef7ALoA" },
-      { id: "y2", title: "How To Begin An Oil Painting, Alla Prima + Color Mixing (Zorn Palette)", channel: "Academy Oversight", url: "https://www.youtube.com/watch?v=flp38wjNKCk" },
-      { id: "y3", title: "Alla Prima Painting Explained (How to Paint Realistically in One Sitting)", channel: "Draw Mix Paint", url: "https://www.youtube.com/watch?v=KYLgSbiD0IE" },
-    ],
-  },
-  {
-    id: "glazing",
-    name: "Glazing",
-    icon: Droplet,
-    description: "Transparent color layers built over a dry underpainting for luminous, deep color.",
-    color: "from-accent-sky to-accent-lavender",
-    difficulty: "Intermediate",
-    youtubeVideos: [
-      { id: "y4", title: "Understanding Glazing with Oil Painting (Grisaille)", channel: "Oil Painting Tutorials", url: "https://www.youtube.com/watch?v=608EZDwDOOk" },
-      { id: "y5", title: "GLAZING and SCUMBLING Oil Painting Techniques", channel: "Art Lessons", url: "https://www.youtube.com/watch?v=5aTqs8MNVfE" },
-    ],
-  },
-  {
-    id: "underpainting",
-    name: "Underpainting & Grisaille",
-    icon: Layers,
-    description: "A monochrome value foundation that establishes form and light before color.",
-    color: "from-accent-sage to-accent-sky",
-    difficulty: "Beginner",
-    youtubeVideos: [
-      { id: "y6", title: "Oil Painting - Grisaille Underpainting", channel: "Old Masters Academy", url: "https://www.youtube.com/watch?v=CAF5zyj2NHg" },
-      { id: "y7", title: "GRISAILLE - Oil Painting Tutorial with Step by Step Demonstration", channel: "Art with Barry", url: "https://www.youtube.com/watch?v=hoCpj0vwmHU" },
-      { id: "y8", title: "Oil Painting Tutorial | Grisaille Techniques - Portrait Study", channel: "Artist Chronicle", url: "https://www.youtube.com/watch?v=pwsiH10accI" },
-    ],
-  },
-  {
-    id: "impasto",
-    name: "Impasto",
+    id: "oil",
+    name: "Oil Painting",
     icon: Palette,
-    description: "Thick, textured paint applied with brush or palette knife for bold, dimensional marks.",
-    color: "from-accent-rose to-accent-coral",
-    difficulty: "Intermediate",
-    youtubeVideos: [
-      { id: "y9", title: "GLAZING vs ALLA PRIMA: Which technique to learn first?", channel: "Atelier Vlog", url: "https://www.youtube.com/watch?v=wngIKAWuc_g" },
+    color: "from-accent-amber to-accent-coral",
+    techniques: [
+      {
+        id: "alla-prima",
+        name: "Alla Prima",
+        icon: Flame,
+        description: "Wet-on-wet painting completed in a single session. Bold, direct, and spontaneous.",
+        color: "from-accent-amber to-accent-coral",
+        difficulty: "Beginner",
+        youtubeVideos: [
+          { id: "o1", title: "Alla Prima Painting Tutorial - 5 Easy Steps to GET STARTED", channel: "Painting Lessons", url: "https://www.youtube.com/watch?v=Os9tef7ALoA" },
+          { id: "o2", title: "How To Begin An Oil Painting, Alla Prima + Color Mixing (Zorn Palette)", channel: "Academy Oversight", url: "https://www.youtube.com/watch?v=flp38wjNKCk" },
+          { id: "o3", title: "Alla Prima Painting Explained (How to Paint Realistically in One Sitting)", channel: "Draw Mix Paint", url: "https://www.youtube.com/watch?v=KYLgSbiD0IE" },
+        ],
+      },
+      {
+        id: "glazing",
+        name: "Glazing",
+        icon: Droplet,
+        description: "Transparent color layers built over a dry underpainting for luminous, deep color.",
+        color: "from-accent-sky to-accent-lavender",
+        difficulty: "Intermediate",
+        youtubeVideos: [
+          { id: "o4", title: "Understanding Glazing with Oil Painting (Grisaille)", channel: "Oil Painting Tutorials", url: "https://www.youtube.com/watch?v=608EZDwDOOk" },
+          { id: "o5", title: "GLAZING and SCUMBLING Oil Painting Techniques", channel: "Art Lessons", url: "https://www.youtube.com/watch?v=5aTqs8MNVfE" },
+        ],
+      },
+      {
+        id: "underpainting",
+        name: "Underpainting & Grisaille",
+        icon: Layers,
+        description: "A monochrome value foundation that establishes form and light before color.",
+        color: "from-accent-sage to-accent-sky",
+        difficulty: "Beginner",
+        youtubeVideos: [
+          { id: "o6", title: "Oil Painting - Grisaille Underpainting", channel: "Old Masters Academy", url: "https://www.youtube.com/watch?v=CAF5zyj2NHg" },
+          { id: "o7", title: "GRISAILLE - Oil Painting Tutorial with Step by Step Demonstration", channel: "Art with Barry", url: "https://www.youtube.com/watch?v=hoCpj0vwmHU" },
+          { id: "o8", title: "Oil Painting Tutorial | Grisaille Techniques - Portrait Study", channel: "Artist Chronicle", url: "https://www.youtube.com/watch?v=pwsiH10accI" },
+        ],
+      },
+      {
+        id: "impasto",
+        name: "Impasto",
+        icon: Palette,
+        description: "Thick, textured paint applied with brush or palette knife for bold, dimensional marks.",
+        color: "from-accent-rose to-accent-coral",
+        difficulty: "Intermediate",
+        youtubeVideos: [
+          { id: "o9", title: "GLAZING vs ALLA PRIMA: Which technique to learn first?", channel: "Atelier Vlog", url: "https://www.youtube.com/watch?v=wngIKAWuc_g" },
+        ],
+      },
+      {
+        id: "scumbling",
+        name: "Scumbling",
+        icon: Wind,
+        description: "Dry, opaque paint dragged over dried layers to create broken, textured color effects.",
+        color: "from-accent-lavender to-accent-sky",
+        difficulty: "Advanced",
+        youtubeVideos: [
+          { id: "o10", title: "Glazing and Scumbling (Oil and Acrylic) - Playlist", channel: "Art Lessons", url: "https://www.youtube.com/playlist?list=PLXFNfq2bbvreAqBxwuqHowkvXlieZyHhC" },
+        ],
+      },
+      {
+        id: "fat-over-lean",
+        name: "Fat-over-Lean",
+        icon: Brush,
+        description: "Progressive oil content layering rule that ensures proper drying and prevents cracking.",
+        color: "from-accent-amber-deep to-accent-sage",
+        difficulty: "Advanced",
+        youtubeVideos: [
+          { id: "o12", title: "How To Begin An Oil Painting - Imprimatura & Underpainting", channel: "Academy Oversight", url: "https://www.youtube.com/watch?v=flp38wjNKCk" },
+        ],
+      },
     ],
   },
   {
-    id: "scumbling",
-    name: "Scumbling",
-    icon: Wind,
-    description: "Dry, opaque paint dragged over dried layers to create broken, textured color effects.",
-    color: "from-accent-lavender to-accent-sky",
-    difficulty: "Advanced",
-    youtubeVideos: [
-      { id: "y10", title: "Glazing and Scumbling (Oil and Acrylic) - Playlist", channel: "Art Lessons", url: "https://www.youtube.com/playlist?list=PLXFNfq2bbvreAqBxwuqHowkvXlieZyHhC" },
-      { id: "y11", title: "GLAZING and SCUMBLING Oil Painting Techniques", channel: "PaintingTube", url: "https://www.youtube.com/watch?v=5aTqs8MNVfE" },
+    id: "watercolor",
+    name: "Watercolor",
+    icon: Droplet,
+    color: "from-accent-sky to-accent-lavender",
+    techniques: [
+      {
+        id: "wet-on-wet",
+        name: "Wet-on-Wet",
+        icon: Cloud,
+        description: "Applying wet paint to pre-soaked paper for soft, flowing, unpredictable edges.",
+        color: "from-accent-sky to-accent-lavender",
+        difficulty: "Beginner",
+        youtubeVideos: [
+          { id: "w1", title: "The Ultimate Wet-on-Wet Guide: 12 Techniques Every Watercolorist Should Know", channel: "Watercolor Tutorials", url: "https://www.youtube.com/watch?v=lOBINzjnLyI" },
+          { id: "w2", title: "5 Easy & Essential Watercolor Techniques For Beginners", channel: "Art with Jane", url: "https://www.youtube.com/watch?v=aOSaQ50xeAM" },
+          { id: "w3", title: "Wet on Wet vs. Wet on Dry Watercolor Technique", channel: "Watercolor West", url: "https://www.youtube.com/watch?v=viw12by3cpE" },
+        ],
+      },
+      {
+        id: "glazing",
+        name: "Glazing & Layering",
+        icon: Layers,
+        description: "Transparent washes built up over dry layers for depth and luminous color.",
+        color: "from-accent-sage to-accent-sky",
+        difficulty: "Intermediate",
+        youtubeVideos: [
+          { id: "w4", title: "Watercolor Washes vs Glazes - Explained!", channel: "Watercolor for Beginners", url: "https://www.youtube.com/watch?v=GCy1jFe8f50" },
+        ],
+      },
+      {
+        id: "dry-brush",
+        name: "Dry Brush",
+        icon: Wind,
+        description: "Minimal water on textured paper for broken, textured strokes and atmospheric effects.",
+        color: "from-accent-amber to-accent-sage",
+        difficulty: "Intermediate",
+        youtubeVideos: [
+          { id: "w5", title: "PERFECT DRY BRUSH EVERY TIME! Watercolor Landscape Painting Technique", channel: "Peter Sheeler", url: "https://www.youtube.com/watch?v=QiRdCyzf7H8" },
+          { id: "w6", title: "Complete Guide to Dry Brush Technique | Watercolor Tutorial", channel: "Watercolor Academy", url: "https://www.youtube.com/watch?v=Y3f-ANngvC4" },
+        ],
+      },
+      {
+        id: "flat-wash",
+        name: "Flat Wash",
+        icon: Droplet,
+        description: "Even, uniform color application across the paper — the foundational watercolor skill.",
+        color: "from-accent-sky to-accent-sage",
+        difficulty: "Beginner",
+        youtubeVideos: [
+          { id: "w7", title: "Watercolor Washes vs Glazes - Explained!", channel: "Watercolor for Beginners", url: "https://www.youtube.com/watch?v=GCy1jFe8f50" },
+        ],
+      },
+      {
+        id: "variegated-wash",
+        name: "Variegated Wash",
+        icon: Palette,
+        description: "Blending two or more colors in a single wet wash for seamless gradient transitions.",
+        color: "from-accent-lavender to-accent-rose",
+        difficulty: "Intermediate",
+        youtubeVideos: [
+          { id: "w8", title: "WATERCOLOR TUTORIAL - Wet on Dry Techniques // Part One", channel: "Watercolor Tutorials", url: "https://www.youtube.com/watch?v=338aXj4Bqgs" },
+        ],
+      },
+      {
+        id: "lifting",
+        name: "Lifting & Reserving",
+        icon: Eraser,
+        description: "Removing or protecting white paper for highlights — negative space and light.",
+        color: "from-accent-sage to-accent-amber",
+        difficulty: "Advanced",
+        youtubeVideos: [
+          { id: "w9", title: "5 Easy & Essential Watercolor Techniques For Beginners", channel: "Art with Jane", url: "https://www.youtube.com/watch?v=aOSaQ50xeAM" },
+        ],
+      },
     ],
   },
   {
-    id: "fat-over-lean",
-    name: "Fat-over-Lean",
-    icon: Brush,
-    description: "Progressive oil content layering rule that ensures proper drying and prevents cracking.",
-    color: "from-accent-amber-deep to-accent-sage",
-    difficulty: "Advanced",
-    youtubeVideos: [
-      { id: "y12", title: "How To Begin An Oil Painting - Imprimatura & Underpainting", channel: "Academy Oversight", url: "https://www.youtube.com/watch?v=flp38wjNKCk" },
+    id: "charcoal",
+    name: "Charcoal",
+    icon: Pencil,
+    color: "from-deep-earth to-accent-amber-deep",
+    techniques: [
+      {
+        id: "vine-sketching",
+        name: "Vine Charcoal Sketching",
+        icon: Pencil,
+        description: "Light, erasable layout and gesture drawing — the starting point for every charcoal work.",
+        color: "from-deep-earth to-accent-amber-deep",
+        difficulty: "Beginner",
+        youtubeVideos: [
+          { id: "c1", title: "How To Draw With Vine Charcoal | MADCHARCOAL Drawing Tutorial", channel: "MadCharcoal", url: "https://www.youtube.com/watch?v=m5Ud--hA6Iw" },
+          { id: "c2", title: "HOW TO SKETCH using willow, vine, white & compressed charcoal", channel: "The Virtual Instructor", url: "https://www.youtube.com/playlist?list=PLTW1vOkF6UStyeKcL3fz8Fc2mk54XeIFF" },
+        ],
+      },
+      {
+        id: "compressed-shading",
+        name: "Compressed Charcoal Shading",
+        icon: PenTool,
+        description: "Deep darks and rich value building with compressed sticks and pencils for contrast.",
+        color: "from-accent-amber-deep to-accent-coral",
+        difficulty: "Intermediate",
+        youtubeVideos: [
+          { id: "c3", title: "Charcoal Drawing - Basic Forms", channel: "The Virtual Instructor", url: "https://www.youtube.com/watch?v=WZ2DjvbFFcs" },
+          { id: "c4", title: "Charcoal Value Drawing Tutorial", channel: "Art Tutor", url: "https://www.youtube.com/watch?v=B8FgFReP8l0" },
+        ],
+      },
+      {
+        id: "blending",
+        name: "Blending & Smudging",
+        icon: Cloud,
+        description: "Stumps, tissues, and fingers for smooth gradients and atmospheric value transitions.",
+        color: "from-accent-sage to-accent-sky",
+        difficulty: "Beginner",
+        youtubeVideos: [
+          { id: "c5", title: "5 Charcoal Blending Secrets for Flawless Shading in Minutes!", channel: "Charcoal Mastery", url: "https://www.youtube.com/watch?v=I-qR-lctRTQ" },
+          { id: "c6", title: "Charcoal Drawing Tutorial (Complete Beginners Guide!)", channel: "Art for Beginners", url: "https://www.youtube.com/watch?v=vKsJTVND1jA" },
+        ],
+      },
+      {
+        id: "subtractive",
+        name: "Subtractive / Eraser Drawing",
+        icon: Eraser,
+        description: "Lifting charcoal with erasers to reveal light and form — painting with negative space.",
+        color: "from-accent-lavender to-accent-sky",
+        difficulty: "Intermediate",
+        youtubeVideos: [
+          { id: "c7", title: "Charcoal Drawing - Basic Forms", channel: "The Virtual Instructor", url: "https://www.youtube.com/watch?v=WZ2DjvbFFcs" },
+        ],
+      },
+      {
+        id: "white-highlights",
+        name: "White Charcoal Highlights",
+        icon: Sun,
+        description: "Adding light values and contrast on toned paper with white charcoal pencils.",
+        color: "from-accent-amber to-accent-sage",
+        difficulty: "Advanced",
+        youtubeVideos: [
+          { id: "c8", title: "HOW TO SKETCH using willow, vine, white & compressed charcoal", channel: "The Virtual Instructor", url: "https://www.youtube.com/playlist?list=PLTW1vOkF6UStyeKcL3fz8Fc2mk54XeIFF" },
+        ],
+      },
+      {
+        id: "fixative",
+        name: "Fixative & Preservation",
+        icon: Wind,
+        description: "Protecting finished charcoal drawings with fixative — proper technique and timing.",
+        color: "from-accent-sky to-accent-lavender",
+        difficulty: "Beginner",
+        youtubeVideos: [
+          { id: "c9", title: "Charcoal Drawing Tutorial (Complete Beginners Guide!)", channel: "Art for Beginners", url: "https://www.youtube.com/watch?v=vKsJTVND1jA" },
+        ],
+      },
+    ],
+  },
+  {
+    id: "pastel",
+    name: "Pastels",
+    icon: Palette,
+    color: "from-accent-rose to-accent-lavender",
+    techniques: [
+      {
+        id: "underpainting",
+        name: "Underpainting",
+        icon: Layers,
+        description: "Establishing a color and value base before pastel layers — watercolor, alcohol, or ink.",
+        color: "from-accent-rose to-accent-coral",
+        difficulty: "Intermediate",
+        youtubeVideos: [
+          { id: "p1", title: "Pastel Art for Beginners – Lavender Field Tutorial", channel: "Valerie McKeehan", url: "https://www.youtube.com/watch?v=eH1WL5Crhio" },
+          { id: "p2", title: "Easy Step by Step Pastel Painting Tutorial for Absolute Beginners!", channel: "Monet Cafe", url: "https://www.youtube.com/watch?v=ylSMGVsNx0o" },
+          { id: "p3", title: "How a Pink Underpainting Instantly Makes Your Pastel Paintings Better", channel: "Monet Cafe Studio", url: "https://www.youtube.com/watch?v=OzKWK9oZEXY" },
+        ],
+      },
+      {
+        id: "dark-to-light",
+        name: "Dark-to-Light Layering",
+        icon: Palette,
+        description: "Building from dark foundations to bright highlights — the core pastel painting method.",
+        color: "from-accent-lavender to-accent-rose",
+        difficulty: "Beginner",
+        youtubeVideos: [
+          { id: "p4", title: "The Magic of Layering in Soft Pastel - Vibrant Poppy Painting Tutorial", channel: "Pastel Tutorials", url: "https://www.youtube.com/watch?v=H7GuLa5hip0" },
+          { id: "p5", title: "3 Steps to More Color with Limited Pastels - Soft Pastel Tutorial", channel: "Pastel Painting", url: "https://www.youtube.com/watch?v=PMCD4OmwLuk" },
+        ],
+      },
+      {
+        id: "scumbling",
+        name: "Scumbling & Feathering",
+        icon: Wind,
+        description: "Broken color strokes for optical mixing and texture — letting layers peek through.",
+        color: "from-accent-sky to-accent-lavender",
+        difficulty: "Advanced",
+        youtubeVideos: [
+          { id: "p6", title: "The Magic of Layering in Soft Pastel - Vibrant Poppy Painting Tutorial", channel: "Pastel Tutorials", url: "https://www.youtube.com/watch?v=H7GuLa5hip0" },
+        ],
+      },
+      {
+        id: "blending",
+        name: "Blending & Softening",
+        icon: Cloud,
+        description: "Finger, tool, and tissue blending for smooth transitions and atmospheric effects.",
+        color: "from-accent-sage to-accent-sky",
+        difficulty: "Beginner",
+        youtubeVideos: [
+          { id: "p7", title: "Easy Step by Step Pastel Painting Tutorial for Absolute Beginners!", channel: "Monet Cafe", url: "https://www.youtube.com/watch?v=ylSMGVsNx0o" },
+        ],
+      },
+      {
+        id: "sgraffito",
+        name: "Sgraffito",
+        icon: Pencil,
+        description: "Scratching through top layers to reveal underpainting beneath for texture and detail.",
+        color: "from-accent-amber-deep to-accent-rose",
+        difficulty: "Advanced",
+        youtubeVideos: [
+          { id: "p8", title: "Essential Tips for Your First Pastel Layer", channel: "Monet Cafe with Susan Jenkins", url: "https://www.youtube.com/playlist?list=PL_UsFfaI-Klqt-UvbkLZyfzN6GDfu0uT6" },
+        ],
+      },
+      {
+        id: "edge-control",
+        name: "Edge Control",
+        icon: Brush,
+        description: "Managing hard, soft, and lost edges to create depth, focus, and visual interest.",
+        color: "from-accent-coral to-accent-amber",
+        difficulty: "Intermediate",
+        youtubeVideos: [
+          { id: "p9", title: "Have You Tried Using Pastel and Watercolor?", channel: "Pastel Tutorials", url: "https://www.youtube.com/watch?v=3WSOUrlt7f0" },
+        ],
+      },
     ],
   },
 ];
@@ -139,11 +390,14 @@ function youtubeEmbedUrl(url: string): string {
 }
 
 export default function OilPaintingDemos() {
+  const [selectedMediumId, setSelectedMediumId] = useState<string>("oil");
   const [selectedTechnique, setSelectedTechnique] = useState<Technique | null>(null);
-  const [guide, setGuide] = useState<OilDemoGuide | null>(null);
+  const [guide, setGuide] = useState<TechniqueGuide | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [playingVideo, setPlayingVideo] = useState<YoutubeVideo | null>(null);
+
+  const selectedMedium = MEDIUMS.find((m) => m.id === selectedMediumId) || MEDIUMS[0];
 
   const handleGenerateGuide = useCallback(async (technique: Technique) => {
     setSelectedTechnique(technique);
@@ -155,7 +409,7 @@ export default function OilPaintingDemos() {
       const res = await fetch(`${API_URL}/functions/v1/analyze-artwork`, {
         method: "POST",
         headers: { apikey: API_KEY, "Content-Type": "application/json" },
-        body: JSON.stringify({ mode: "oil-painting-demo", technique: technique.id }),
+        body: JSON.stringify({ mode: "oil-painting-demo", medium: selectedMediumId, technique: technique.id }),
       });
       const data = await res.json().catch(() => null);
 
@@ -174,63 +428,103 @@ export default function OilPaintingDemos() {
     } finally {
       setLoading(false);
     }
+  }, [selectedMediumId]);
+
+  const handleMediumChange = useCallback((mediumId: string) => {
+    setSelectedMediumId(mediumId);
+    setSelectedTechnique(null);
+    setGuide(null);
+    setError(null);
   }, []);
 
   return (
     <section className="max-w-4xl mx-auto">
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-10">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
         <div className="inline-flex items-center gap-2 bg-gradient-to-r from-pastel-amber/50 to-pastel-coral/50 border border-accent-amber/30 rounded-full px-4 py-1.5 mb-4">
           <Palette size={14} className="text-accent-amber-deep" />
           <p className="text-accent-amber-deep text-xs font-semibold uppercase tracking-[0.15em]">
-            Oil Painting Academy
+            Art Academy
           </p>
         </div>
         <h2 className="font-display text-3xl sm:text-4xl font-bold text-deep-earth mb-3">
-          Master Oil Painting Techniques
+          Master Traditional Art Techniques
         </h2>
         <p className="text-muted-brown max-w-xl mx-auto">
-          Explore time-honored oil painting methods with AI-generated process guides and curated
-          video tutorials from master painters on YouTube.
+          Explore oil, watercolor, charcoal, and pastel methods with AI-generated process guides and
+          curated video tutorials from master artists on YouTube.
         </p>
       </motion.div>
 
+      {/* Medium category tabs */}
+      <div className="flex justify-center gap-2 mb-8 flex-wrap">
+        {MEDIUMS.map((medium) => {
+          const Icon = medium.icon;
+          const isActive = selectedMediumId === medium.id;
+          return (
+            <button
+              key={medium.id}
+              onClick={() => handleMediumChange(medium.id)}
+              className={`inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition-all ${
+                isActive
+                  ? `bg-gradient-to-r ${medium.color} text-white shadow-sticker`
+                  : "bg-white/70 text-muted-brown hover:text-deep-earth border border-sand/40"
+              }`}
+            >
+              <Icon size={15} />
+              {medium.name}
+            </button>
+          );
+        })}
+      </div>
+
       {!selectedTechnique && (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {TECHNIQUES.map((tech, i) => {
-            const Icon = tech.icon;
-            const diff = DIFFICULTY_STYLES[tech.difficulty.toLowerCase()] || DIFFICULTY_STYLES.intermediate;
-            return (
-              <motion.button
-                key={tech.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.08 }}
-                onClick={() => handleGenerateGuide(tech)}
-                className="group relative text-left bg-white/80 backdrop-blur-sm rounded-3xl border border-sand/40 shadow-card-soft p-6 hover:shadow-glow-amber transition-all duration-300 overflow-hidden"
-              >
-                <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${tech.color}`} />
-                <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${tech.color} flex items-center justify-center shadow-sticker mb-4 group-hover:scale-110 transition-transform`}>
-                  <Icon size={24} className="text-white" />
-                </div>
-                <h3 className="font-display text-lg font-bold text-deep-earth mb-1.5">{tech.name}</h3>
-                <p className="text-sm text-muted-brown leading-relaxed mb-4">{tech.description}</p>
-                <div className="flex items-center gap-3 flex-wrap">
-                  <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${diff.bg} ${diff.text}`}>
-                    {diff.label}
-                  </span>
-                  <span className="inline-flex items-center gap-1 text-xs text-muted-brown">
-                    <Youtube size={12} className="text-accent-rose" />
-                    {tech.youtubeVideos.length} {tech.youtubeVideos.length === 1 ? "video" : "videos"}
-                  </span>
-                </div>
-                <div className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-accent-amber-deep group-hover:gap-2.5 transition-all">
-                  <Sparkles size={12} />
-                  Generate AI guide
-                </div>
-              </motion.button>
-            );
-          })}
-        </div>
+        <>
+          <motion.div
+            key={selectedMediumId + "-header"}
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center mb-6"
+          >
+            <h3 className="font-display text-xl font-bold text-deep-earth">{selectedMedium.name} Techniques</h3>
+            <p className="text-sm text-muted-brown mt-1">Choose a technique to generate an AI guide and watch tutorials</p>
+          </motion.div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {selectedMedium.techniques.map((tech, i) => {
+              const Icon = tech.icon;
+              const diff = DIFFICULTY_STYLES[tech.difficulty.toLowerCase()] || DIFFICULTY_STYLES.intermediate;
+              return (
+                <motion.button
+                  key={tech.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.06 }}
+                  onClick={() => handleGenerateGuide(tech)}
+                  className="group relative text-left bg-white/80 backdrop-blur-sm rounded-3xl border border-sand/40 shadow-card-soft p-6 hover:shadow-glow-amber transition-all duration-300 overflow-hidden"
+                >
+                  <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${tech.color}`} />
+                  <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${tech.color} flex items-center justify-center shadow-sticker mb-4 group-hover:scale-110 transition-transform`}>
+                    <Icon size={24} className="text-white" />
+                  </div>
+                  <h3 className="font-display text-lg font-bold text-deep-earth mb-1.5">{tech.name}</h3>
+                  <p className="text-sm text-muted-brown leading-relaxed mb-4">{tech.description}</p>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${diff.bg} ${diff.text}`}>
+                      {diff.label}
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-xs text-muted-brown">
+                      <Youtube size={12} className="text-accent-rose" />
+                      {tech.youtubeVideos.length} {tech.youtubeVideos.length === 1 ? "video" : "videos"}
+                    </span>
+                  </div>
+                  <div className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-accent-amber-deep group-hover:gap-2.5 transition-all">
+                    <Sparkles size={12} />
+                    Generate AI guide
+                  </div>
+                </motion.button>
+              );
+            })}
+          </div>
+        </>
       )}
 
       <AnimatePresence mode="wait">
@@ -246,7 +540,7 @@ export default function OilPaintingDemos() {
               className="inline-flex items-center gap-1.5 text-sm text-muted-brown hover:text-deep-earth transition-colors mb-6"
             >
               <ExternalLink size={14} className="rotate-180" />
-              Back to all techniques
+              Back to {selectedMedium.name} techniques
             </button>
 
             <div className="bg-white/85 backdrop-blur-sm rounded-3xl border border-accent-amber/20 shadow-card-warm overflow-hidden">
@@ -257,6 +551,7 @@ export default function OilPaintingDemos() {
                     return <Icon size={28} className="text-white" />;
                   })()}
                   <div>
+                    <p className="text-white/70 text-xs font-semibold uppercase tracking-wider">{selectedMedium.name}</p>
                     <h3 className="font-display text-xl font-bold text-white">{selectedTechnique.name}</h3>
                     <p className="text-white/80 text-sm">{selectedTechnique.description}</p>
                   </div>

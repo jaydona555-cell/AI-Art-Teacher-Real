@@ -498,36 +498,83 @@ Deno.serve(async (req: Request) => {
       return new Response(JSON.stringify({ error: "No AI API keys are configured on the server." }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // ── Mode: Oil Painting Demo (AI-generated step-by-step technique guide) ──
+    // ── Mode: Technique Guide (AI-generated step-by-step guide for any medium) ──
     if (body.mode === "oil-painting-demo") {
+      const medium = body.medium || "oil";
       const technique = body.technique || "alla-prima";
-      const techniqueDescriptions: Record<string, string> = {
-        "alla-prima": "Alla Prima (wet-on-wet, single session painting)",
-        "glazing": "Glazing (transparent color layers over a dry underpainting)",
-        "impasto": "Impasto (thick, textured paint applied with brush or knife)",
-        "underpainting": "Underpainting & Grisaille (monochrome value foundation)",
-        "scumbling": "Scumbling (dry, opaque layers dragged over dried paint)",
-        "fat-over-lean": "Fat-over-Lean Layering (progressive oil content for proper drying)",
-      };
-      const techniqueName = techniqueDescriptions[technique] || techniqueDescriptions["alla-prima"];
 
-      const systemPrompt = `You are a master oil painting instructor with decades of atelier teaching experience. Create a detailed, step-by-step process guide for the technique: ${techniqueName}.
+      const MEDIUM_LABELS: Record<string, string> = {
+        oil: "Oil Painting",
+        watercolor: "Watercolor",
+        charcoal: "Charcoal Drawing",
+        pastel: "Pastel Painting",
+      };
+      const mediumLabel = MEDIUM_LABELS[medium] || MEDIUM_LABELS.oil;
+
+      const TECHNIQUE_DESCRIPTIONS: Record<string, Record<string, string>> = {
+        oil: {
+          "alla-prima": "Alla Prima (wet-on-wet, single session painting)",
+          "glazing": "Glazing (transparent color layers over a dry underpainting)",
+          "impasto": "Impasto (thick, textured paint applied with brush or knife)",
+          "underpainting": "Underpainting & Grisaille (monochrome value foundation)",
+          "scumbling": "Scumbling (dry, opaque layers dragged over dried paint)",
+          "fat-over-lean": "Fat-over-Lean Layering (progressive oil content for proper drying)",
+        },
+        watercolor: {
+          "wet-on-wet": "Wet-on-Wet (applying wet paint to pre-soaked paper for soft, flowing edges)",
+          "glazing": "Glazing & Layering (transparent washes built up over dry layers)",
+          "dry-brush": "Dry Brush (minimal water on textured paper for broken, textured strokes)",
+          "flat-wash": "Flat Wash (even, uniform color application across the paper)",
+          "variegated-wash": "Variegated Wash (blending two or more colors in a single wet wash)",
+          "lifting": "Lifting & Reserving (removing or protecting white paper for highlights)",
+        },
+        charcoal: {
+          "vine-sketching": "Vine Charcoal Sketching (light, erasable layout and gesture drawing)",
+          "compressed-shading": "Compressed Charcoal Shading (deep darks and rich value building)",
+          "blending": "Blending & Smudging (stumps, tissues, and fingers for smooth gradients)",
+          "subtractive": "Subtractive/Eraser Drawing (lifting charcoal to reveal light and form)",
+          "white-highlights": "White Charcoal Highlights (adding light values and contrast on toned paper)",
+          "fixative": "Fixative & Preservation (protecting finished charcoal drawings)",
+        },
+        pastel: {
+          "underpainting": "Underpainting (establishing color and value base before pastel layers)",
+          "dark-to-light": "Dark-to-Light Layering (building from dark foundations to bright highlights)",
+          "scumbling": "Scumbling & Feathering (broken color strokes for optical mixing and texture)",
+          "blending": "Blending & Softening (finger, tool, and tissue blending for smooth transitions)",
+          "sgraffito": "Sgraffito (scratching through top layers to reveal underpainting beneath)",
+          "edge-control": "Edge Control (managing hard, soft, and lost edges for depth and focus)",
+        },
+      };
+
+      const mediumTechniques = TECHNIQUE_DESCRIPTIONS[medium] || TECHNIQUE_DESCRIPTIONS.oil;
+      const techniqueName = mediumTechniques[technique] || mediumTechniques[Object.keys(mediumTechniques)[0]];
+
+      const mediumContext: Record<string, string> = {
+        oil: "oil painting instructor with decades of atelier teaching experience. Reference specific oil paint colors (e.g. ultramarine, burnt sienna, titanium white), mediums (linseed oil, Liquin, Gamsol), brush types (hog bristle flats, sable rounds, palette knives), and surfaces (linen canvas, gessoed panels).",
+        watercolor: "watercolor painting instructor. Reference specific pigments (e.g. phthalo blue, quinacridone rose, raw sienna), brush types (squirrel mops, round synthetics, flat wash brushes), paper types (cold-pressed 140lb, hot-pressed, rough), and water control techniques. Emphasize paper preparation, water-to-pigment ratios, and timing.",
+        charcoal: "charcoal drawing instructor. Reference vine/willow charcoal, compressed charcoal sticks and pencils, white charcoal, kneaded and vinyl erasers, blending stumps and tortillions, charcoal paper (Strathmore, toned paper), and fixatives. Emphasize value structure, mark-making, and the subtractive method.",
+        pastel: "pastel painting instructor. Reference soft pastels, hard pastels, pastel pencils, surfaces (Pastelmat, sanded paper, UART), underpainting methods (watercolor, alcohol, ink), blending tools (fingers, foam pipe insulation, paper towels), and fixative considerations. Emphasize layering, color temperature, and edge control.",
+      };
+
+      const instructorContext = mediumContext[medium] || mediumContext.oil;
+
+      const systemPrompt = `You are a master ${instructorContext} Create a detailed, step-by-step process guide for the ${mediumLabel} technique: ${techniqueName}.
 
 The guide should be practical, beginner-friendly, and cover:
-1. Materials needed (specific paint colors, brushes, mediums, surfaces)
+1. Materials needed (specific ${mediumLabel.toLowerCase()} supplies, tools, and surfaces)
 2. Setup and preparation
 3. Step-by-step process (5-7 clear steps with what to do at each stage)
 4. Common mistakes and how to avoid them
-5. Pro tips from a master painter
+5. Pro tips from a master artist
 6. Practice exercises to develop the technique
 
-Use markdown formatting with clear headings, bullet points, and emphasis. Be specific about colors, brush sizes, and techniques. Write as if speaking directly to an eager student.
+Use markdown formatting with clear headings, bullet points, and emphasis. Be specific about materials, tools, and techniques. Write as if speaking directly to an eager student.
 
 Respond with ONLY a valid JSON object: {"title": "string", "guide": "string (full markdown guide)", "difficulty": "beginner|intermediate|advanced", "estimatedTime": "string"}`;
 
       let result: ApiCallResult = { ok: false, text: "", error: "No API keys" };
       if (geminiApiKey) {
-        result = await tryGeminiTextOnly(ALL_TEXT_MODELS, geminiApiKey, systemPrompt, [{ role: "user", parts: [{ text: `Create a comprehensive oil painting process guide for: ${techniqueName}` }] }], 4096, 0.7);
+        result = await tryGeminiTextOnly(ALL_TEXT_MODELS, geminiApiKey, systemPrompt, [{ role: "user", parts: [{ text: `Create a comprehensive ${mediumLabel} process guide for: ${techniqueName}` }] }], 4096, 0.7);
       }
       if (!result.ok) {
         if (!openaiApiKey) {
@@ -535,7 +582,7 @@ Respond with ONLY a valid JSON object: {"title": "string", "guide": "string (ful
         }
         const resp = await callOpenAIText(openaiApiKey, [
           { role: "system", content: systemPrompt },
-          { role: "user", content: `Create a comprehensive oil painting process guide for: ${techniqueName}` },
+          { role: "user", content: `Create a comprehensive ${mediumLabel} process guide for: ${techniqueName}` },
         ], 4096, 0.7);
         if (resp.ok) {
           const data = await resp.json();
@@ -545,7 +592,7 @@ Respond with ONLY a valid JSON object: {"title": "string", "guide": "string (ful
       }
 
       if (!result.ok || !result.text) {
-        return new Response(JSON.stringify({ error: result.error || "Failed to generate oil painting guide" }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        return new Response(JSON.stringify({ error: result.error || "Failed to generate technique guide" }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
       let parsedGuide: { title?: string; guide?: string; difficulty?: string; estimatedTime?: string } | null = null;

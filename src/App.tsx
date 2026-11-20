@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Palette, Sparkles, AlertCircle, RotateCcw, Coins, ShieldAlert, Award, Store, FlaskConical, Hand, GalleryHorizontalEnd, ImagePlus, Accessibility, Trophy, Brain, Focus, Layers, Sticker as StickerIcon } from "lucide-react";
+import { Palette, Sparkles, AlertCircle, RotateCcw, Coins, ShieldAlert, Award, Store, FlaskConical, Hand, GalleryHorizontalEnd, ImagePlus, Accessibility, Trophy, Brain, Focus, Layers, Sticker as StickerIcon, BookOpen } from "lucide-react";
 import UploadZone from "@/components/UploadZone";
 import LoadingAnalysis from "@/components/LoadingAnalysis";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
@@ -26,6 +26,7 @@ import AchievementBadge from "@/components/AchievementBadge";
 import BadgeToast from "@/components/BadgeToast";
 import LearningProfileSelector from "@/components/LearningProfileSelector";
 import FocusMode from "@/components/FocusMode";
+import OilPaintingDemos from "@/components/OilPaintingDemos";
 import StepByStepFeedback from "@/components/StepByStepFeedback";
 import SensoryCheckIn, { type Mood } from "@/components/SensoryCheckIn";
 import { RewardProvider, useReward } from "@/context/RewardContext";
@@ -111,7 +112,7 @@ function AppContent() {
   const { recordUpload, recordFollowup, pendingStreakMilestone, clearPendingStreakMilestone } = useAchievements();
   const learningProfile = useLearningProfile();
   const { surveyCompleted } = learningProfile;
-  const [view, setView] = useState<"studio" | "gallery">("studio");
+  const [view, setView] = useState<"studio" | "gallery" | "learn">("studio");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<AnalysisState>(INITIAL_STATE);
@@ -463,6 +464,17 @@ function AppContent() {
                     </span>
                   )}
                 </button>
+                <button
+                  onClick={() => setView("learn")}
+                  className={`inline-flex items-center gap-1.5 text-xs font-semibold rounded-full px-3 py-1.5 transition-all ${
+                    view === "learn"
+                      ? "bg-gradient-to-r from-accent-amber to-accent-coral text-white shadow-sticker"
+                      : "text-muted-brown hover:text-deep-earth"
+                  }`}
+                >
+                  <BookOpen size={13} />
+                  <span className="hidden sm:inline">Learn</span>
+                </button>
               </div>
               <button
                 onClick={() => setProfileOpen(true)}
@@ -567,6 +579,8 @@ function AppContent() {
                 </button>
               </div>
             </section>
+          ) : view === "learn" ? (
+            <OilPaintingDemos />
           ) : (
             <>
           {/* Hero */}

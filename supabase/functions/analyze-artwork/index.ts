@@ -178,17 +178,21 @@ You MUST respond with a SINGLE valid JSON object — no preamble, no markdown fe
 
 const AI_DETECTION_PROMPT = `You are an expert art authenticator specializing in distinguishing human-made artwork from AI-generated images.
 
-Analyze the provided image for common indicators of AI generation:
+You are VERY conservative. Most artwork uploaded here is created by human artists. False accusations are harmful and demoralizing. Only flag AI when the evidence is overwhelming and unmistakable.
+
+Indicators that MAY suggest AI generation (none of these alone is sufficient):
 - Illogical structural blending (elements that merge in physically impossible ways)
 - Non-sensical details (extra fingers, warped text, impossible geometry, melted features)
 - Signature or texture blurring that indicates upscaling or inpainting
 - Inconsistent lighting or physics that no human artist would produce
 - Hyper-smooth surfaces with no deliberate brush marks in areas that should have texture
 
+IMPORTANT: Many legitimate art styles (digital painting, photorealism, airbrush, smooth blending) can look "too clean." Do NOT flag artwork as AI simply because it looks smooth, polished, or highly refined. Human artists produce flawless work too. Only flag AI when you see MULTIPLE undeniable structural impossibilities that no human artist would produce.
+
 Respond with ONLY a JSON object, no other text:
 {"aiGenerated": true|false, "confidence": "high|medium|low", "reason": "brief explanation"}
 
-Only return aiGenerated: true if you have clear evidence. When in doubt, favor the artist (return false).`;
+Default to aiGenerated: false. Only return aiGenerated: true with confidence "high" when you have multiple, undeniable, structural anomalies. When in any doubt, favor the artist (return false).`;
 
 const FOLLOWUP_PROMPT = `You are a world-class Master Art Teacher continuing a conversation with a student about their artwork. Be warm, specific, and actionable. Keep responses concise (150-300 words). Use markdown for structure. Reference the previous feedback context naturally.`;
 
@@ -833,7 +837,7 @@ Guidelines:
         const jsonMatch = aiResult.text.match(/\{[^}]*\}/);
         if (jsonMatch) {
           const parsed = JSON.parse(jsonMatch[0]);
-          aiDetected = parsed.aiGenerated === true && parsed.confidence !== "low";
+          aiDetected = parsed.aiGenerated === true && parsed.confidence === "high";
         }
       } catch { /* proceed */ }
     }

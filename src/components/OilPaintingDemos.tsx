@@ -31,8 +31,12 @@ import {
   ChevronDown,
   ChevronRight,
   GraduationCap,
+  Camera,
+  Award,
 } from "lucide-react";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
+import GuidedPractice from "@/components/GuidedPractice";
+import { useLessonProgress } from "@/hooks/useLessonProgress";
 
 const API_URL = import.meta.env.VITE_SUPABASE_URL;
 const API_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -235,6 +239,7 @@ export default function OilPaintingDemos() {
   const [error, setError] = useState<string | null>(null);
   const [playingVideo, setPlayingVideo] = useState<YoutubeVideo | null>(null);
   const [activeSection, setActiveSection] = useState<string>("overview");
+  const { markCompleted, markPracticed, getProgress, getMediumProgress } = useLessonProgress();
 
   const selectedMedium = MEDIUMS.find((m) => m.id === selectedMediumId) || MEDIUMS[0];
 
@@ -305,6 +310,14 @@ export default function OilPaintingDemos() {
             >
               <Icon size={15} />
               {medium.name}
+              {(() => {
+                const mp = getMediumProgress(medium.techniques.map((t) => t.id));
+                return mp.completed > 0 ? (
+                  <span className={`text-[10px] font-bold rounded-full px-1.5 py-0.5 ${isActive ? "bg-white/25" : "bg-accent-sage/20 text-accent-sage"}`}>
+                    {mp.completed}/{mp.total}
+                  </span>
+                ) : null;
+              })()}
             </button>
           );
         })}
@@ -330,6 +343,15 @@ export default function OilPaintingDemos() {
                   className="group relative text-left bg-white/80 backdrop-blur-sm rounded-3xl border border-sand/40 shadow-card-soft p-6 hover:shadow-glow-amber transition-all duration-300 overflow-hidden"
                 >
                   <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${tech.color}`} />
+                  {(() => {
+                    const prog = getProgress(tech.id);
+                    return (prog.completed || prog.practiced) ? (
+                      <div className="absolute top-3 right-3 flex items-center gap-1">
+                        {prog.practiced && <Camera size={14} className="text-accent-sky" />}
+                        {prog.completed && <Award size={14} className="text-accent-sage" />}
+                      </div>
+                    ) : null;
+                  })()}
                   <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${tech.color} flex items-center justify-center shadow-sticker mb-4 group-hover:scale-110 transition-transform`}>
                     <Icon size={24} className="text-white" />
                   </div>
@@ -341,10 +363,18 @@ export default function OilPaintingDemos() {
                       <Youtube size={12} className="text-accent-rose" />
                       {tech.youtubeVideos.length} {tech.youtubeVideos.length === 1 ? "video" : "videos"}
                     </span>
+                    {(() => {
+                      const prog = getProgress(tech.id);
+                      return prog.completed ? (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-pastel-sage/40 text-accent-sage">
+                          <CheckCircle2 size={10} /> Done
+                        </span>
+                      ) : null;
+                    })()}
                   </div>
                   <div className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-accent-amber-deep group-hover:gap-2.5 transition-all">
                     <Sparkles size={12} />
-                    Start full lesson
+                    {getProgress(tech.id).completed ? "Review lesson" : "Start full lesson"}
                   </div>
                 </motion.button>
               );
@@ -412,6 +442,7 @@ export default function OilPaintingDemos() {
                       { id: "mistakes", label: "Mistakes", icon: AlertTriangle },
                       { id: "exercises", label: "Exercises", icon: Dumbbell },
                       { id: "masters", label: "Master References", icon: GraduationCap },
+                      { id: "practice", label: "Practice", icon: Camera },
                       { id: "chat", label: "Ask the Teacher", icon: MessageCircle },
                       { id: "videos", label: "YouTube", icon: Youtube },
                     ].map((section) => {
@@ -553,6 +584,25 @@ export default function OilPaintingDemos() {
                       </motion.div>
                     )}
 
+                    {/* Guided Practice */}
+                    {activeSection === "practice" && (
+                      <motion.div key="practice" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                        <GuidedPractice
+                          mediumName={lesson.mediumName}
+                          techniqueName={lesson.techniqueName}
+                          lessonContext={[
+                            `Technique: ${lesson.techniqueName}`,
+                            `Medium: ${lesson.mediumName}`,
+                            `Overview: ${lesson.overview}`,
+                            `Learning Objectives: ${lesson.learningObjectives.join("; ")}`,
+                            `Steps: ${lesson.steps.map((s, i) => `Step ${i + 1}: ${s.title} — ${s.instruction}`).join(" | ")}`,
+                            `Exercises: ${lesson.exercises.map((e) => e.name).join("; ")}`,
+                          ].join("\n")}
+                          onPracticed={() => markPracticed(selectedTechnique.id)}
+                        />
+                      </motion.div>
+                    )}
+
                     {/* AI Tutor Chat */}
                     {activeSection === "chat" && (
                       <motion.div key="chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -578,6 +628,42 @@ export default function OilPaintingDemos() {
                       </motion.div>
                     )}
                   </AnimatePresence>
+
+                  {/* Lesson completion */}
+                  <div className="mt-6 pt-5 border-t border-sand/40 flex items-center justify-between flex-wrap gap-3">
+                    {(() => {
+                      const prog = getProgress(selectedTechnique.id);
+                      return (
+                        <>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {prog.practiced && (
+                              <span className="inline-flex items-center gap-1.5 text-xs font-semibold bg-pastel-sky/40 text-accent-sky rounded-full px-3 py-1.5">
+                                <Camera size={12} /> Practiced
+                              </span>
+                            )}
+                            {prog.completed ? (
+                              <span className="inline-flex items-center gap-1.5 text-xs font-semibold bg-pastel-sage/40 text-accent-sage rounded-full px-3 py-1.5">
+                                <Award size={12} /> Lesson Completed
+                              </span>
+                            ) : (
+                              <button
+                                onClick={() => markCompleted(selectedTechnique.id)}
+                                className="inline-flex items-center gap-1.5 text-xs font-semibold bg-gradient-to-r from-accent-sage to-accent-sky text-white rounded-full px-4 py-2 shadow-sticker hover:shadow-glow-sage transition-all"
+                              >
+                                <CheckCircle2 size={14} />
+                                Mark Lesson Complete
+                              </button>
+                            )}
+                          </div>
+                          <p className="text-[11px] text-muted-brown">
+                            {prog.completed
+                              ? "Great work completing this lesson! Try the Practice tab or explore another technique."
+                              : "Read through the lesson, then mark it complete to track your progress."}
+                          </p>
+                        </>
+                      );
+                    })()}
+                  </div>
                 </div>
               )}
             </div>

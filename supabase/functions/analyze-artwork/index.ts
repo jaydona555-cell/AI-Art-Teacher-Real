@@ -791,6 +791,74 @@ Guidelines:
       return new Response(JSON.stringify({ feedback: result.text }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    // ── Mode: Practice Review (technique-specific critique of a practice attempt) ──
+    if (body.mode === "practice-review") {
+      const { imageBase64, mimeType, mediumName, techniqueName, lessonContext } = body;
+      if (!imageBase64) {
+        return new Response(JSON.stringify({ error: "No image provided" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      const PRACTICE_REVIEW_PROMPT = `You are a master art teacher reviewing a student's practice attempt at ${techniqueName} in ${mediumName}. The student has been following a structured lesson and is now submitting their practice work for targeted feedback.
+
+LESSON CONTEXT (what the student was learning):
+${lessonContext || "(lesson context not provided)"}
+
+Your feedback should:
+- Be warm, encouraging, and specific — celebrate what they did well before pointing out areas to improve
+- Focus on how well their work demonstrates the specific technique (${techniqueName}) they were practicing
+- Reference specific steps, concepts, or exercises from the lesson
+- Give 2-3 concrete, actionable suggestions for improvement tied to the technique
+- End with a "Next Step" — one specific thing to try in their next practice session
+- Be concise (200-350 words) and use markdown for structure
+
+Do NOT run AI detection on this image. The student is submitting their own practice work from a lesson. Do NOT score or assign a skill level. This is practice feedback, not a formal critique.
+
+Respond with ONLY a valid JSON object:
+{"feedback": "string (your markdown feedback)", "strengths": ["string", ...] (2-3 things they did well), "improvements": ["string", ...] (2-3 areas to work on), "nextStep": "string (one specific next action)"}`;
+
+      let result: ApiCallResult = { ok: false, text: "", error: "No API keys" };
+      if (geminiApiKey) {
+        result = await tryGeminiVision(ALL_VISION_MODELS, geminiApiKey, PRACTICE_REVIEW_PROMPT, imageBase64, mimeType || "image/jpeg", "Review this practice attempt and provide technique-focused feedback. Respond with ONLY a valid JSON object.", 2048, 0.7, true);
+      }
+      if (!result.ok) {
+        if (!openaiApiKey) {
+          return new Response(JSON.stringify({ error: result.error || "All AI providers failed" }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+        const resp = await callOpenAIVision(openaiApiKey, PRACTICE_REVIEW_PROMPT, "Review this practice attempt and provide technique-focused feedback. Respond with ONLY a valid JSON object.", imageBase64, mimeType || "image/jpeg", 2048, 0.7);
+        if (resp.ok) {
+          const data = await resp.json();
+          const text = data.choices?.[0]?.message?.content;
+          if (text) result = { ok: true, text };
+        }
+      }
+
+      if (!result.ok || !result.text) {
+        return new Response(JSON.stringify({ error: result.error || "Failed to review practice work" }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      let parsedReview: { feedback?: string; strengths?: string[]; improvements?: string[]; nextStep?: string } | null = null;
+      try {
+        const jsonStr = extractJsonFromText(result.text);
+        if (jsonStr) parsedReview = JSON.parse(jsonStr);
+      } catch { /* fall through */ }
+
+      if (!parsedReview || !parsedReview.feedback) {
+        return new Response(JSON.stringify({
+          feedback: result.text.slice(0, 2000),
+          strengths: [],
+          improvements: [],
+          nextStep: "",
+        }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      return new Response(JSON.stringify({
+        feedback: parsedReview.feedback,
+        strengths: parsedReview.strengths || [],
+        improvements: parsedReview.improvements || [],
+        nextStep: parsedReview.nextStep || "",
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     // ── Mode: Follow-up conversation ──
     if (body.mode === "followup") {
       const history = body.history || [];

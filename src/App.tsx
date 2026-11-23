@@ -14,6 +14,8 @@ import StreakCelebration from "@/components/StreakCelebration";
 import SeasonalBackground from "@/components/SeasonalBackground";
 import SeasonalControl from "@/components/SeasonalControl";
 import PremiumBackground from "@/components/PremiumBackground";
+import MediumBackground from "@/components/MediumBackground";
+import { useSoundEffects } from "@/hooks/useSoundEffects";
 import TokenShop from "@/components/TokenShop";
 import PreferredMediumSelector from "@/components/PreferredMediumSelector";
 import MasterpieceModal from "@/components/MasterpieceModal";
@@ -112,6 +114,9 @@ function AppContent() {
   const { recordUpload, recordFollowup, pendingStreakMilestone, clearPendingStreakMilestone } = useAchievements();
   const learningProfile = useLearningProfile();
   const { surveyCompleted } = learningProfile;
+  const { sensoryMode } = useAccessibility();
+  const soundEnabled = sensoryMode !== "minimal";
+  const { playSkillSound, resumeAudio } = useSoundEffects(soundEnabled);
   const [view, setView] = useState<"studio" | "gallery" | "learn">("studio");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -250,6 +255,7 @@ function AppContent() {
             critiquePins: pins,
             savedToPortfolio: false,
           });
+          playSkillSound(normalizedSkill);
 
           // ---- Save to portfolio (cloud storage + database) ----
           if (selectedFile) {
@@ -412,9 +418,11 @@ function AppContent() {
     <div className={`min-h-screen relative text-deep-earth transition-all duration-700 ${isWinter ? "text-cream" : ""}`}>
       {showPremiumBg && activeBackground ? (
         <PremiumBackground background={activeBackground} />
+      ) : medium !== "none" ? (
+        <MediumBackground medium={medium} />
       ) : (
         <SeasonalBackground />
-      )}
+      )
 
       <div className="relative overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-accent-amber/10 to-accent-coral/10 rounded-full blur-3xl pointer-events-none" />

@@ -114,9 +114,8 @@ function AppContent() {
   const { recordUpload, recordFollowup, pendingStreakMilestone, clearPendingStreakMilestone } = useAchievements();
   const learningProfile = useLearningProfile();
   const { surveyCompleted } = learningProfile;
-  const { sensoryMode } = useAccessibility();
   const soundEnabled = sensoryMode !== "minimal";
-  const { playSkillSound, resumeAudio } = useSoundEffects(soundEnabled);
+  const { playSkillSound } = useSoundEffects(soundEnabled);
   const [view, setView] = useState<"studio" | "gallery" | "learn">("studio");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -422,7 +421,7 @@ function AppContent() {
         <MediumBackground medium={medium} />
       ) : (
         <SeasonalBackground />
-      )
+      )}
 
       <div className="relative overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-accent-amber/10 to-accent-coral/10 rounded-full blur-3xl pointer-events-none" />

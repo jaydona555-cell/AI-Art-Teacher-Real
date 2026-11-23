@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Palette, Sparkles, AlertCircle, RotateCcw, Coins, ShieldAlert, Award, Store, FlaskConical, Hand, GalleryHorizontalEnd, ImagePlus, Accessibility, Trophy, Brain, Focus, Layers, Sticker as StickerIcon, BookOpen } from "lucide-react";
+import { Palette, Sparkles, AlertCircle, RotateCcw, Coins, ShieldAlert, Award, Store, FlaskConical, Hand, GalleryHorizontalEnd, ImagePlus, Accessibility, Trophy, Brain, Focus, Layers, Sticker as StickerIcon, BookOpen, Pen, Crown } from "lucide-react";
 import UploadZone from "@/components/UploadZone";
 import LoadingAnalysis from "@/components/LoadingAnalysis";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
@@ -29,6 +29,8 @@ import BadgeToast from "@/components/BadgeToast";
 import LearningProfileSelector from "@/components/LearningProfileSelector";
 import FocusMode from "@/components/FocusMode";
 import OilPaintingDemos from "@/components/OilPaintingDemos";
+import Leaderboard from "@/components/Leaderboard";
+import Workspace from "@/components/Workspace";
 import StepByStepFeedback from "@/components/StepByStepFeedback";
 import SensoryCheckIn, { type Mood } from "@/components/SensoryCheckIn";
 import { RewardProvider, useReward } from "@/context/RewardContext";
@@ -116,7 +118,7 @@ function AppContent() {
   const { surveyCompleted } = learningProfile;
   const soundEnabled = sensoryMode !== "minimal";
   const { playSkillSound } = useSoundEffects(soundEnabled);
-  const [view, setView] = useState<"studio" | "gallery" | "learn">("studio");
+  const [view, setView] = useState<"studio" | "gallery" | "learn" | "workspace" | "leaderboard">("studio");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<AnalysisState>(INITIAL_STATE);
@@ -472,6 +474,28 @@ function AppContent() {
                   )}
                 </button>
                 <button
+                  onClick={() => setView("workspace")}
+                  className={`inline-flex items-center gap-1.5 text-xs font-semibold rounded-full px-3 py-1.5 transition-all ${
+                    view === "workspace"
+                      ? "bg-gradient-to-r from-accent-amber to-accent-coral text-white shadow-sticker"
+                      : "text-muted-brown hover:text-deep-earth"
+                  }`}
+                >
+                  <Pen size={13} />
+                  <span className="hidden sm:inline">Workspace</span>
+                </button>
+                <button
+                  onClick={() => setView("leaderboard")}
+                  className={`inline-flex items-center gap-1.5 text-xs font-semibold rounded-full px-3 py-1.5 transition-all ${
+                    view === "leaderboard"
+                      ? "bg-gradient-to-r from-accent-amber to-accent-coral text-white shadow-sticker"
+                      : "text-muted-brown hover:text-deep-earth"
+                  }`}
+                >
+                  <Crown size={13} />
+                  <span className="hidden sm:inline">Ranks</span>
+                </button>
+                <button
                   onClick={() => setView("learn")}
                   className={`inline-flex items-center gap-1.5 text-xs font-semibold rounded-full px-3 py-1.5 transition-all ${
                     view === "learn"
@@ -586,6 +610,10 @@ function AppContent() {
                 </button>
               </div>
             </section>
+          ) : view === "workspace" ? (
+            <Workspace />
+          ) : view === "leaderboard" ? (
+            <Leaderboard />
           ) : view === "learn" ? (
             <OilPaintingDemos />
           ) : (
